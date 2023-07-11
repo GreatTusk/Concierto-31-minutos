@@ -6,12 +6,16 @@ columns=10 # Se define el tamaño de las columnas del lugar de eventos
 asientos_0=np.arange(1,rows*columns+1).reshape(rows,columns).astype(str) # Matriz para el primer artista
 asientos_1=np.arange(1,rows*columns+1).reshape(rows,columns).astype(str) # Segundo
 asientos_2=np.arange(1,rows*columns+1).reshape(rows,columns).astype(str) # Tercero
+
 matriz_matrices=np.stack([asientos_0,asientos_1,asientos_2]) # Matriz 3D que guarda todas las matrices
 
 matriz_diccionarios=np.empty(100,dtype=object) # Matriz para guardar los diccionarios con los datos de los clientes
 contador_matriz=0 # Contador para avanzar en la matriz de diccionarios y poder pasar a la siguiente persona
 
 error="Ha ocurrido un error catastrófico." # Mensaje si se activa un bloque except
+
+def suficiente():
+    print("Se ha ingresado un dato incorrecto demasiadas veces. Abortando...")
 
 def dato_inv(dato,vocal="o"):
     print(f"{dato} ingresad{vocal} es inválid{vocal}. Inténtelo de nuevo.") # Mensaje por defecto para cuando el usuario entregue un input inválido
@@ -100,34 +104,81 @@ def validacion_pk(matriz_diccionarios,rut): # Esta función es reciclada de la a
         elif diccionarios["Rut"]==rut:
             encontrado=True # Se notifica que ha sido encontrado
     return encontrado # Se devuelve el valor de la variable. Esta va a servir para asegurarnos que no se ingresarán dos ruts iguales más adelante
-             
 
+'''             
+def ingreso_datos(mensaje,condicion,indice):
+    while True:
+        nombre=input()
+        condicion=condicion
+        if not condicion: # El nombre debe estar compuesto de letras y tener longitud>=3 (Ej. "Leo")
+            dato_inv("Nombre")
+            contadores[indice]+=1
+        else:
+            break
+        if contadores[indice]>=3:
+            suficiente()
+            return
+    return nombre
+'''
 def validacion(): # Esta función guarda la primera opción del menú. Se validarán los datos del cliente antes de pasar a las compras
     global contador_matriz,primary_key,matriz_diccionarios # Se da acceso a las variables que serán necesarias
     try:
-        nombre=input("Ingrese su nombre:\n")
-        if not (len(nombre)>=3 and nombre.isalpha()): # El nombre debe estar compuesto de letras y tener longitud>=3 (Ej. "Leo")
-            dato_inv("Nombre")
-            return # Para cada dato, se evaluará si no cumple con las condiciones, para así dar mensaje de error y abortar la función
-        apellido=input("Ingrese su apellido:\n")
-        if not (len(apellido)>=3 and apellido.isalpha()):
-            dato_inv("Apellido")
-            return
-        rut=input("Ingrese su rut sin puntos ni guion ni dígito verificador:\n")
-        if not (1000000<int(rut)<30000000 and rut.isdigit() and (not validacion_pk(matriz_diccionarios,rut))): # Aquí se hace uso del valor retornado de la función validacion_pk() para asegurarnos que el rut no ha sido registrado antes
-            dato_inv("Rut")
-            return
-        banda=int(input("Ingrese el nombre del artista que va a ver:\n1) Coágulo Espátulo\n2) Joe Pino\n3) Hermanos Guarennes\n"))
-        match banda: # Switch para que el usuario seleccione para qué concierto quiere comprar entradas
-            case 1:
-                banda_elegida="Coágulo Espátulo"
-            case 2:
-                banda_elegida="Joe Pino"
-            case 3:
-                banda_elegida="Hermanos Guarennes"
-            case _:
-                dato_inv("Opción","a")
+        contadores=[0,0,0,0]
+        while True:
+            nombre=input("Ingrese su nombre:\n")
+            condicion=(len(nombre)>=3 and nombre.isalpha())
+            if not condicion: # El nombre debe estar compuesto de letras y tener longitud>=3 (Ej. "Leo")
+                dato_inv("Nombre")
+                contadores[0]+=1
+            else:
+                break
+            if contadores[0]>=3:
+                suficiente()
                 return
+        while True:
+            apellido=input("Ingrese su apellido:\n")
+            if not (len(apellido)>=3 and apellido.isalpha()):
+                dato_inv("Apellido")
+                contadores[1]+=1
+            else:
+                break
+            if contadores[1]>=3:
+                suficiente()
+                return
+        while True:
+            rut=input("Ingrese su rut sin puntos ni guion ni dígito verificador:\n")
+            if not (1000000<int(rut)<30000000 and rut.isdigit() and (not validacion_pk(matriz_diccionarios,rut))): # Aquí se hace uso del valor retornado de la función validacion_pk() para asegurarnos que el rut no ha sido registrado antes
+                dato_inv("Rut")
+                contadores[2]+=1
+            else:
+                break
+            if contadores[2]>=3:
+                suficiente()
+                return
+        while True:
+            try:
+                banda=int(input("Ingrese el nombre del artista que va a ver:\n1) Coágulo Espátulo\n2) Joe Pino\n3) Hermanos Guarennes\n"))
+                match banda: # Switch para que el usuario seleccione para qué concierto quiere comprar entradas
+                    case 1:
+                        banda_elegida="Coágulo Espátulo"
+                        break
+                    case 2:
+                        banda_elegida="Joe Pino"
+                        break
+                    case 3:
+                        banda_elegida="Hermanos Guarennes"
+                        break
+                    case _:
+                        dato_inv("Opción","a")
+                        contadores[3]+=1
+                if contadores[3]>=3:
+                    suficiente()
+                    return
+            except:
+                dato_inv("Opción","a")
+                contadores[3]+=1
+                continue
+
         compras=[0,0,0] # Aquí se guardarán el total de compras por tipo de asiento. Se reincia cada vez que se invoca la función para dar paso a otra persona
         asientos_compra=[[0 for n in range(3)] for a in range(3)] # Se crea una lista 2D para guardar los asientos según el tipo
         if banda_elegida=="Coágulo Espátulo":
@@ -137,7 +188,7 @@ def validacion(): # Esta función guarda la primera opción del menú. Se valida
         elif banda_elegida=="Hermanos Guarennes":
             transaccion(2,compras,asientos_compra) 
 
-        diccionario={ # Se crea un diccionario para guardar todos los datos ingresados y validados hasta ahora
+        diccionario = { # Se crea un diccionario para guardar todos los datos ingresados y validados hasta ahora
             "Nombre": nombre,
             "Apellido": apellido,
             "Rut": rut,
@@ -148,10 +199,11 @@ def validacion(): # Esta función guarda la primera opción del menú. Se valida
         }
         
         total_gastado=sum(diccionario["Total asientos comprados"]) # Se suman los valores del total gastado en asientos
-        diccionario["Total gastado"]=total_gastado # Y se coloca ese valor sobre la clave que habíamos dejado en 0
+        diccionario["Total gastado"] = total_gastado # Y se coloca ese valor sobre la clave que habíamos dejado en 0
+        
         matriz_diccionarios[contador_matriz]=diccionario # Se agrega el diccionario a la matriz de diccionarios
         contador_matriz+=1 # Se suma uno al índice de la matriz anterior, para poder pasar a la siguiente persona
-        
+        print(matriz_diccionarios)
     except:
         print(error)
                 
